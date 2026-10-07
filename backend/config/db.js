@@ -3,15 +3,25 @@ import { MongoClient } from "mongodb";
 let db;
 
 export async function connectDB() {
-  const client = new MongoClient(process.env.MONGO_URI);
-  await client.connect();
-  db = client.db("Chat-App");
-  await db.collection("users").createIndex({ username: 1 }, { unique: true });
+  const mongoUri = process.env.MONGO_URI;
 
-  await db.collection("users").createIndex({ email: 1 }, { unique: true });
-  console.log("MongoDB Connected");
+  if (!mongoUri) {
+    throw new Error("MONGO_URI is not defined");
+  }
+
+  const client = new MongoClient(mongoUri);
+
+  await client.connect();
+
+  db = client.db("Chat-App");
+
+  console.log("MongoDB connected");
 }
 
 export function getDB() {
+  if (!db) {
+    throw new Error("Database not connected");
+  }
+
   return db;
 }
