@@ -13,25 +13,33 @@ function App() {
 
   const [auth, setAuth] = useState(null);
   const [authMode, setAuthMode] = useState("login");
-  if (!auth) {
-    if (authMode === "register") {
-      return (
-        <Register
-          onRegister={setAuth}
-          onSwitchToLogin={() => setAuthMode("login")}
-        />
-      );
-    }
+  const [authLoading, setAuthLoading] = useState(true);
 
-    return (
-      <Login
-        onLogin={setAuth}
-        onSwitchToRegister={() => setAuthMode("register")}
-      />
-    );
-  }
   const currentUser = auth?.user;
   const accessToken = auth?.accessToken;
+
+  useEffect(() => {
+    async function restoreSession() {
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/refresh", {
+          method: "POST",
+          credentials: "include",
+        });
+        if (!response.ok) {
+          setAuth(null);
+          return;
+        }
+        const data = await response.json();
+        setAuth(data);
+      } catch (error) {
+        console.error(error);
+        setAuth(null);
+      } finally {
+        setAuthLoading(false);
+      }
+    }
+    restoreSession();
+  }, []);
 
   useEffect(() => {
     async function fetchUsers() {
@@ -82,8 +90,30 @@ function App() {
     fetchMessages();
   }, [selectedUser]);
 
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
   if (!auth) {
-    return <Login onLogin={setAuth} />;
+    if (authMode === "register") {
+      return (
+        <Register
+          onRegister={setAuth}
+          onSwitchToLogin={() => setAuthMode("login")}
+        />
+      );
+    }
+
+    return (
+      <Login
+        onLogin={setAuth}
+        onSwitchToRegister={() => setAuthMode("register")}
+      />
+    );
   }
 
   async function handleSendMessage(event) {
