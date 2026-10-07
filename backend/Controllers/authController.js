@@ -152,3 +152,14 @@ export async function refreshAccessToken(req, res) {
     });
   }
 }
+
+export async function logout(req, res) {
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
+  res.status(200).json({
+    message: "Logged out succesfully!",
+  });
+}

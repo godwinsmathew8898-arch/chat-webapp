@@ -90,6 +90,19 @@ function App() {
     fetchMessages();
   }, [selectedUser]);
 
+  async function handleLogout() {
+    try {
+      await fetch("http://localhost:5000/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      setAuth(null);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  }
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -156,6 +169,12 @@ function App() {
             className="border border-gray-300 w-full rounded-md px-3 py-2 outline-none"
           />
         </div>
+        <button
+          onClick={handleLogout}
+          className="rounded-lg border px-3 py-1 text-sm"
+        >
+          Logout
+        </button>
 
         <div>
           <div className="space-y-2">
