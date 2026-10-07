@@ -1,9 +1,9 @@
-import { getDB } from "../config/db";
+import { getDB } from "../config/db.js";
 
 export async function getUsers(req, res) {
   try {
     const db = getDB();
-    const users = db.collection("users").find({}).toArray();
+    const users =await db.collection("users").find({}).toArray();
     res.status(200).json(users);
   } catch (error) {
     console.error(error);
