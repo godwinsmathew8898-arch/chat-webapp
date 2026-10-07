@@ -72,19 +72,21 @@ export async function register(req, res) {
 
     const db = getDB();
 
-    const existingUser = await db.collection("users").findOne({ email });
+    const existingUser = await db
+      .collection("users")
+      .findOne({ $or: [{ username }, { email }] });
 
     if (existingUser) {
       return res.status(409).json({
-        message: "User already exists",
+        message: "Username or email is already taken!",
       });
     }
-
+    const normalizedUsername = username.trim().toLowerCase();
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = {
-      username,
-      email,
+      username: normalizedUsername,
+      email: email.trim().toLowerCase(),
       password: hashedPassword,
       createdAt: new Date(),
     };

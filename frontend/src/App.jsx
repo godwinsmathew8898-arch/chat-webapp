@@ -25,7 +25,7 @@ function App() {
   useEffect(() => {
     async function restoreSession() {
       try {
-        const response = await fetch("http://localhost:5000/api/auth/refresh", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/refresh`, {
           method: "POST",
           credentials: "include",
         });
@@ -50,7 +50,7 @@ function App() {
   async function fetchChats() {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/chats",
+        `${import.meta.env.VITE_API_URL}/api/chats`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -86,7 +86,7 @@ function App() {
       setError("");
       try {
         const response = await fetch(
-          `http://localhost:5000/api/users/search?username=${encodeURIComponent(search)}`,
+          `${import.meta.env.VITE_API_URL}/api/users/search?username=${encodeURIComponent(search)}`,
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
@@ -115,7 +115,7 @@ function App() {
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/messages/${selectedUser._id}`,
+          `${import.meta.env.VITE_API_URL}/api/messages/${selectedUser._id}`,
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
@@ -140,7 +140,7 @@ function App() {
 
   async function handleLogout() {
     try {
-      await fetch("http://localhost:5000/api/auth/logout", {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
@@ -188,7 +188,7 @@ function App() {
       return;
     }
     try {
-      const response = await fetch("http://localhost:5000/api/messages", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -213,7 +213,7 @@ function App() {
   async function handleSelectUser(user) {
   try {
     const response = await fetch(
-      "http://localhost:5000/api/chats",
+      `${import.meta.env.VITE_API_URL}/api/chats`,
       {
         method: "POST",
         headers: {
