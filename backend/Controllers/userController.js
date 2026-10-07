@@ -1,9 +1,22 @@
 import { getDB } from "../config/db.js";
+import { ObjectId } from "mongodb";
 
 export async function getUsers(req, res) {
   try {
     const db = getDB();
-    const users =await db.collection("users").find({}).toArray();
+    const users = await db
+      .collection("users")
+      .find(
+        {
+          _id: { $ne: new ObjectId(req.userId) },
+        },
+        {
+          projection: {
+            password: 0,
+          },
+        },
+      )
+      .toArray();
     res.status(200).json(users);
   } catch (error) {
     console.error(error);
@@ -13,4 +26,3 @@ export async function getUsers(req, res) {
     });
   }
 }
-

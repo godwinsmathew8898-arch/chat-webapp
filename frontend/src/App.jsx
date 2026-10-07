@@ -42,9 +42,14 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!accessToken) return;
     async function fetchUsers() {
       try {
-        const response = await fetch("http://localhost:5000/api/users");
+        const response = await fetch("http://localhost:5000/api/users", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch users!");
         }
@@ -57,7 +62,7 @@ function App() {
       }
     }
     fetchUsers();
-  }, []);
+  }, [accessToken]);
 
   useEffect(() => {
     async function fetchMessages() {
