@@ -3,7 +3,6 @@ import Login from "./pages/Login";
 import Register from "./pages/SignUp";
 
 function App() {
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -20,6 +19,8 @@ function App() {
 
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+
+  const [chats, setChats] = useState([]);
 
   useEffect(() => {
     async function restoreSession() {
@@ -45,6 +46,34 @@ function App() {
   }, []);
 
   useEffect(() => {
+  if (!accessToken) return;
+  async function fetchChats() {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/chats",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch chats");
+      }
+
+      const data = await response.json();
+
+      setChats(data.chats);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  fetchChats();
+}, [accessToken]);
+
+  useEffect(() => {
     if (!accessToken) return;
     async function searchUsers() {
       if (!search.trim()) {
@@ -53,6 +82,8 @@ function App() {
         setLoading(false);
         return;
       }
+      setLoading(true);
+      setError("");
       try {
         const response = await fetch(
           `http://localhost:5000/api/users/search?username=${encodeURIComponent(search)}`,
@@ -78,7 +109,7 @@ function App() {
 
   useEffect(() => {
     async function fetchMessages() {
-      if (!selectedUser) {
+      if (!selectedUser || !accessToken) {
         return;
       }
 
@@ -105,7 +136,7 @@ function App() {
     }
 
     fetchMessages();
-  }, [selectedUser]);
+  }, [selectedUser, accessToken]);
 
   async function handleLogout() {
     try {
@@ -115,6 +146,11 @@ function App() {
       });
 
       setAuth(null);
+      setSelectedUser(null);
+      setMessages([]);
+      setChats([]);
+      setSearch("");
+      setSearchResults([]);
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -174,6 +210,50 @@ function App() {
     }
   }
 
+  async function handleSelectUser(user) {
+  try {
+    const response = await fetch(
+      "http://localhost:5000/api/chats",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          userId: user._id,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to open chat");
+    }
+
+    const data = await response.json();
+
+    setChats((prev) => {
+  const alreadyExists = prev.some(
+    (chat) => chat._id === data.chat._id,
+  );
+
+  if (alreadyExists) {
+    return prev;
+  }
+
+  return [...prev, { ...data.chat, participantUsers: [currentUser, user] }];
+});
+
+    setSelectedUser(user);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+
+
+
+
   return (
     <div className="flex h-screen">
       <aside className="w-80 border-r border-gray-300 p-5">
@@ -188,42 +268,32 @@ function App() {
             className="w-full rounded-lg border px-3 py-2"
           />
           <div className="mt-3 space-y-2">
+            {loading && <p>Loading users...</p>}
+            {error && <p>{error}</p>}
             {searchResults.map((user) => (
-              <button
-                key={user._id}
-                onClick={() => setSelectedUser(user)}
-                className="block w-full rounded-lg p-3 text-left hover:bg-gray-100"
-              >
+              <button key={user._id} onClick={() => handleSelectUser(user)}
+                className="block w-full rounded-lg p-3 text-left hover:bg-gray-100">
                 {user.username}
               </button>
             ))}
           </div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="rounded-lg border px-3 py-1 text-sm"
-        >
+        <button onClick={handleLogout} className="rounded-lg border px-3 py-1 text-sm">
           Logout
         </button>
-
-        <div>
-          <div className="space-y-2">
-            {loading && <p>Loading users...</p>}
-            {error && <p>{error}</p>}
-
-            {!loading &&
-              !error &&
-              users.map((user) => (
-                <div
-                  key={user._id}
-                  onClick={() => setSelectedUser(user)}
-                  className="cursor-pointer rounded-lg p-3 hover:bg-gray-300"
-                >
-                  <p className="font-medium">{user.username}</p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                </div>
-              ))}
-          </div>
+        <div className="mt-4 space-y-2">
+          {chats.map((chat) => {
+            const otherUser = chat.participantUsers.find(
+              (user) => user._id !== currentUser._id,
+            );
+            if (!otherUser) return null;
+            return (
+              <button key={chat._id} onClick={() => setSelectedUser(otherUser)}
+                className="block w-full rounded-lg p-3 text-left hover:bg-gray-100">
+                <p className="font-medium">{otherUser.username}</p>
+              </button>
+            );
+          })}
         </div>
       </aside>
 

@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
-import { getDB } from "../config/db";
+import { getDB } from "../config/db.js";
 
-export async function creareOrGetChat(req, res) {
+export async function createOrGetChat(req, res) {
   try {
     const currentUserId = req.userId;
     const { userId } = req.body;
@@ -29,7 +29,7 @@ export async function creareOrGetChat(req, res) {
     const currentUserObjectId = new ObjectId(currentUserId);
     const otherUserObjectId = new ObjectId(userId);
 
-    const existingChat = await db.collection("chats").find({
+    const existingChat = await db.collection("chats").findOne({
       participants: {
         $all: [currentUserObjectId, otherUserObjectId],
       },
@@ -44,10 +44,10 @@ export async function creareOrGetChat(req, res) {
     const newChat = {
       participants: [currentUserObjectId, otherUserObjectId],
       createdAt: new Date(),
-      updateAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    const result = await db.collection("chats").inserOne(newChat);
+    const result = await db.collection("chats").insertOne(newChat);
 
     res.status(201).json({
       chat: {
@@ -60,6 +60,68 @@ export async function creareOrGetChat(req, res) {
 
     res.status(500).json({
       message: "Failed to create chat",
+    });
+  }
+}
+
+export async function getChats(req, res) {
+  try {
+    const currentUserId = new ObjectId(req.userId);
+
+    const db = getDB();
+
+    const chats = await db
+      .collection("chats")
+      .aggregate([
+        {
+          $match: {
+            participants: currentUserId,
+          },
+        },
+
+        {
+          $sort: {
+            updatedAt: -1,
+          },
+        },
+
+        {
+          $lookup: {
+            from: "users",
+            localField: "participants",
+            foreignField: "_id",
+            as: "participantUsers",
+          },
+        },
+
+        {
+          $project: {
+            createdAt: 1,
+            updatedAt: 1,
+
+            participantUsers: {
+              $map: {
+                input: "$participantUsers",
+                as: "user",
+                in: {
+                  _id: "$$user._id",
+                  username: "$$user.username",
+                },
+              },
+            },
+          },
+        },
+      ])
+      .toArray();
+
+    res.status(200).json({
+      chats,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Failed to fetch chats",
     });
   }
 }
