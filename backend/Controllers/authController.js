@@ -4,6 +4,16 @@ import { getDB } from "../config/db.js";
 import { createAccessToken, createRefreshToken } from "../utils/token.js";
 import { ObjectId } from "mongodb";
 
+function refreshCookieOptions() {
+  const isProduction = process.env.NODE_ENV === "production";
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: "/",
+  };
+}
+
 export async function login(req, res) {
   try {
     const { email, password } = req.body;
@@ -37,9 +47,7 @@ export async function login(req, res) {
 
     const refreshToken = createRefreshToken(userId);
     res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      ...refreshCookieOptions(),
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -98,9 +106,7 @@ export async function register(req, res) {
 
     const refreshToken = createRefreshToken(userId);
     res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      ...refreshCookieOptions(),
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -156,11 +162,7 @@ export async function refreshAccessToken(req, res) {
 }
 
 export async function logout(req, res) {
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: false,
-    sameSite: "lax",
-  });
+  res.clearCookie("refreshToken", refreshCookieOptions());
   res.status(200).json({
     message: "Logged out succesfully!",
   });

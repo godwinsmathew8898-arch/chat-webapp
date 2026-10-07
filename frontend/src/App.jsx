@@ -140,10 +140,14 @@ function App() {
 
   async function handleLogout() {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to log out");
+      }
 
       setAuth(null);
       setSelectedUser(null);

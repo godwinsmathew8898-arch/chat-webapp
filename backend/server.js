@@ -12,6 +12,7 @@ import authRouter from "./Router/authRouter.js";
 import chatRoutes from "./Router/chatRoutes.js";
 
 const app = express();
+app.set("trust proxy", 1);
 
 const port = process.env.PORT || 5000;
 
