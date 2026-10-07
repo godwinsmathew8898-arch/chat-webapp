@@ -8,6 +8,7 @@ import { connectDB } from "./config/db.js";
 import userRoutes from "./Router/userRouter.js";
 import messageRoutes from "./Router/messageRoutes.js";
 import authRouter from "./Router/authRouter.js";
+import chatRoutes from "./Router/chatRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -23,6 +24,7 @@ app.use(cookieParser());
 app.use("/api/users/", userRoutes);
 app.use("/api/messages/", messageRoutes);
 app.use("/api/auth", authRouter);
+app.use("/api/chats", chatRoutes);
 
 // ==================================
 app.get("/", (req, res) => {

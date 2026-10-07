@@ -18,6 +18,9 @@ function App() {
   const currentUser = auth?.user;
   const accessToken = auth?.accessToken;
 
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+
   useEffect(() => {
     async function restoreSession() {
       try {
@@ -43,26 +46,35 @@ function App() {
 
   useEffect(() => {
     if (!accessToken) return;
-    async function fetchUsers() {
+    async function searchUsers() {
+      if (!search.trim()) {
+        setSearchResults([]);
+        setError("");
+        setLoading(false);
+        return;
+      }
       try {
-        const response = await fetch("http://localhost:5000/api/users", {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
+        const response = await fetch(
+          `http://localhost:5000/api/users/search?username=${encodeURIComponent(search)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
           },
-        });
+        );
         if (!response.ok) {
-          throw new Error("Failed to fetch users!");
+          throw new Error("Failed to search users!");
         }
         const data = await response.json();
-        setUsers(data);
+        setSearchResults(data);
       } catch (error) {
         setError(error.message);
       } finally {
         setLoading(false);
       }
     }
-    fetchUsers();
-  }, [accessToken]);
+    searchUsers();
+  }, [search, accessToken]);
 
   useEffect(() => {
     async function fetchMessages() {
@@ -170,9 +182,22 @@ function App() {
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Search users..."
-            className="border border-gray-300 w-full rounded-md px-3 py-2 outline-none"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search username..."
+            className="w-full rounded-lg border px-3 py-2"
           />
+          <div className="mt-3 space-y-2">
+            {searchResults.map((user) => (
+              <button
+                key={user._id}
+                onClick={() => setSelectedUser(user)}
+                className="block w-full rounded-lg p-3 text-left hover:bg-gray-100"
+              >
+                {user.username}
+              </button>
+            ))}
+          </div>
         </div>
         <button
           onClick={handleLogout}
