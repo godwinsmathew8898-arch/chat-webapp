@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Login from "./pages/Login";
+import Register from "./pages/SignUp";
 
 function App() {
   const [users, setUsers] = useState([]);
@@ -11,6 +12,26 @@ function App() {
   const [messages, setMessages] = useState([]);
 
   const [auth, setAuth] = useState(null);
+  const [authMode, setAuthMode] = useState("login");
+  if (!auth) {
+    if (authMode === "register") {
+      return (
+        <Register
+          onRegister={setAuth}
+          onSwitchToLogin={() => setAuthMode("login")}
+        />
+      );
+    }
+
+    return (
+      <Login
+        onLogin={setAuth}
+        onSwitchToRegister={() => setAuthMode("register")}
+      />
+    );
+  }
+  const currentUser = auth?.user;
+  const accessToken = auth?.accessToken;
 
   useEffect(() => {
     async function fetchUsers() {
@@ -38,7 +59,12 @@ function App() {
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/messages/${selectedUser._id}?senderId=${currentUser._id}`,
+          `http://localhost:5000/api/messages/${selectedUser._id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
         );
 
         if (!response.ok) {
@@ -56,13 +82,9 @@ function App() {
     fetchMessages();
   }, [selectedUser]);
 
-
-if (!auth) {
-  return <Login onLogin={setAuth} />;
-}
-
-const currentUser = auth.user;
-const accessToken = auth.accessToken;
+  if (!auth) {
+    return <Login onLogin={setAuth} />;
+  }
 
   async function handleSendMessage(event) {
     event.preventDefault();
@@ -74,9 +96,9 @@ const accessToken = auth.accessToken;
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization:`Bearer ${accessToken}`
+          Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({          
+        body: JSON.stringify({
           receiverId: selectedUser._id,
           content: message,
         }),

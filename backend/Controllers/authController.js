@@ -56,3 +56,62 @@ export async function login(req, res) {
     });
   }
 }
+
+
+export async function register(req, res) {
+  try {
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        message: "Username, email and password are required",
+      });
+    }
+
+    const db = getDB();
+
+    const existingUser = await db.collection("users").findOne({ email });
+
+    if (existingUser) {
+      return res.status(409).json({
+        message: "User already exists",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = {
+      username,
+      email,
+      password: hashedPassword,
+      createdAt: new Date(),
+    };
+
+    const result = await db.collection("users").insertOne(newUser);
+
+    const accessToken = jwt.sign(
+      {
+        userId: result.insertedId.toString(),
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "1h",
+      },
+    );
+
+    res.status(201).json({
+      accessToken,
+      user: {
+        _id: result.insertedId,
+        username,
+        email,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Registration failed",
+    });
+  }
+}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function Login({ onLogin }) {
+function Login({ onLogin, onSwitchToRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -21,7 +21,7 @@ function Login({ onLogin }) {
       console.error(data.message);
       return;
     }
-    onLogin(data)
+    onLogin(data);
   }
 
   return (
@@ -54,6 +54,13 @@ function Login({ onLogin }) {
             className="w-full rounded-lg bg-black px-4 py-2 text-white"
           >
             Login
+          </button>
+          <button
+            type="button"
+            onClick={onSwitchToRegister}
+            className="cursor-pointer w-full text-sm text-gray-500"
+          >
+            Don't have an account? Sign up
           </button>
         </form>
       </div>

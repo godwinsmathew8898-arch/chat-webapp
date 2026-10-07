@@ -5,6 +5,6 @@ import { authenticateToken } from "../middleware/authMiddleware.js";
 const router=express.Router()
 
 router.post("/",authenticateToken,sendMessage)
-router.get("/:receiverId",getMessages)
+router.get("/:receiverId",authenticateToken, getMessages)
 
 export default router

@@ -4,7 +4,7 @@ export async function sendMessage(req, res) {
   try {
     const { receiverId, content } = req.body;
     const senderId = req.userId;
-    if (senderId || !receiverId || !content) {
+    if (!senderId || !receiverId || !content) {
       return res.status(400).json({
         message: "senderId, receiverId and content are required",
       });
@@ -35,7 +35,7 @@ export async function sendMessage(req, res) {
 export async function getMessages(req, res) {
   try {
     const { receiverId } = req.params;
-    const { senderId } = req.query;
+    const senderId = req.userId;
     if (!senderId) {
       return res.status(400).json({
         message: "senderId is required!",
